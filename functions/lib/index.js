@@ -19,17 +19,20 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
     response.send("Hello from Firebase!");
 });
 const db = admin.firestore();
-function setupToken(expiration) {
-    const algorithm = 'ES256';
-    const iat = Math.floor(Date.now() / 1000);
-    const exp = iat + expiration;
-    return function createToken(secret, teamid, keyid) {
-        const headers = { algorithm, keyid };
+class JWTToken {
+    constructor(interval) {
+        this.interval = interval;
+        this.algorithm = 'ES256';
+    }
+    create(secret, teamid, keyid) {
+        const iat = Math.floor(Date.now() / 1000);
+        const exp = iat + this.interval;
+        const headers = { algorithm: this.algorithm, keyid };
         const payload = { iss: teamid, exp, iat };
         return jwt.sign(payload, secret, headers);
-    };
+    }
 }
-const jwtToken = setupToken(24 * 60 * 60);
+const jwtToken = new JWTToken(14 * 24 * 60 * 60);
 exports.updateDeveloperToken = functions.firestore
     .document('users/{userId}')
     .onWrite((event) => __awaiter(this, void 0, void 0, function* () {
@@ -40,7 +43,7 @@ exports.updateDeveloperToken = functions.firestore
     const developerTokens = db.collection('developerTokens').doc(userId);
     const developerToken = yield developerTokens.get();
     const generateDeveloperToken = () => __awaiter(this, void 0, void 0, function* () {
-        const token = jwtToken(functions.config().applemusickit.privatekey, functions.config().applemusickit.teamid, functions.config().applemusickit.keyid);
+        const token = jwtToken.create(functions.config().applemusickit.privatekey, functions.config().applemusickit.teamid, functions.config().applemusickit.keyid);
         yield developerTokens.set({
             token: token,
             updateAt: admin.firestore.FieldValue.serverTimestamp()
@@ -49,8 +52,8 @@ exports.updateDeveloperToken = functions.firestore
     const data = developerToken.data();
     if (developerToken.exists && data) {
         const now = new Date();
-        const diff = (now.getTime() - data.updateAt.getTime()) / (1000 * 60);
-        if (diff > 10) {
+        const diff = (now.getTime() - data.updateAt.getTime()) / 1000;
+        if (diff > jwtToken.interval - 12 * 60 * 60) {
             yield generateDeveloperToken();
         }
         return;
