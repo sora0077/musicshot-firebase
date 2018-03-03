@@ -1,0 +1,1 @@
+# musicshot-firebase
