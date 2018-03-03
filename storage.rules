@@ -1,0 +1,5 @@
+service firebase.storage {
+  match /admin/{allPaths=**} {
+    allow read, write: if request.auth.uid == "H5rhUy5dZQMoW18fL3NziMYGrbr2";
+  }
+}
