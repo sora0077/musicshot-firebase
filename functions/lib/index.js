@@ -36,6 +36,9 @@ const jwtToken = new JWTToken(14 * 24 * 60 * 60);
 exports.updateDeveloperToken = functions.firestore
     .document('users/{userId}')
     .onWrite((event) => __awaiter(this, void 0, void 0, function* () {
+    if (!event.data.data()) {
+        return;
+    }
     const userId = event.params && event.params.userId;
     if (!userId) {
         return;
