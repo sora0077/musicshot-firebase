@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import * as jwt from 'jsonwebtoken';
-admin.initializeApp(functions.config().firebase)
+admin.initializeApp()
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -30,9 +30,9 @@ const jwtToken = new JWTToken(14 * 24 * 60 * 60)
 
 export const updateDeveloperToken = functions.firestore
     .document('users/{userId}')
-    .onWrite(async event => {
-        if (!event.data.data()) { return }
-        const userId = event.params && event.params.userId
+    .onWrite(async (change, context) => {
+        if (!change.after.data()) { return }
+        const userId = context && context.params && context.params.userId
         if (!userId) { return }
 
         const developerTokens = db.collection('developerTokens').doc(userId)

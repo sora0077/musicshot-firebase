@@ -11,7 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const jwt = require("jsonwebtoken");
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 //
@@ -35,11 +35,11 @@ class JWTToken {
 const jwtToken = new JWTToken(14 * 24 * 60 * 60);
 exports.updateDeveloperToken = functions.firestore
     .document('users/{userId}')
-    .onWrite((event) => __awaiter(this, void 0, void 0, function* () {
-    if (!event.data.data()) {
+    .onWrite((change, context) => __awaiter(this, void 0, void 0, function* () {
+    if (!change.after.data()) {
         return;
     }
-    const userId = event.params && event.params.userId;
+    const userId = context && context.params && context.params.userId;
     if (!userId) {
         return;
     }
